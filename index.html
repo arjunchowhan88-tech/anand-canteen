@@ -3,9 +3,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="manifest" href="/manifest.json">
-<link rel="icon" href="/icon-192.png" sizes="192x192">
-<link rel="apple-touch-icon" href="/icon-192.png">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="anand_canteen_icon_192x192.png" sizes="192x192">
+<link rel="apple-touch-icon" href="anand_canteen_icon_192x192.png">
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -542,15 +542,16 @@
     // MENU & CART
     // ───────────────────────────────
     const menuItems = [
-      { name: "Anda Kari", price: 80, veg: false, desc: "Spicy egg curry", img: "images/anda kari.jpg" },
-      { name: "Chicken Curry", price: 150, veg: false, desc: "Fresh chicken curry", img: "images/chicken.jpg" },
-      { name: "Biryani", price: 180, veg: false, desc: "Aromatic chicken biryani", img: "images/biryani.jpg" },
-      { name: "Paneer Tikka", price: 120, veg: true, desc: "Grilled paneer with spices", img: "images/paneer tickka.jpg" },
-      { name: "Gulab Jamun", price: 60, veg: true, desc: "Sweet milk dumplings", img: "images/gulabjamun.jpg" },
-      { name: "Chai", price: 12, veg: true, desc: "Hot masala chai", img: "images/chai.jpg" },
-      { name: "Misal Pav", price: 65, veg: true, desc: "Spicy misal with pav", img: "images/misal pav.jpg" },
-      { name: "Poha", price: 45, veg: true, desc: "Onion, sev, peanuts poha", img: "images/poha.jpg" }
-    ];
+  { name: "Anda Kari", price: 80, veg: false, desc: "Spicy egg curry", img: "anda karijpg" },
+  { name: "Chicken Curry", price: 150, veg: false, desc: "Fresh chicken curry", img: "chicken.jpg" },
+  { name: "Biryani", price: 180, veg: false, desc: "Aromatic chicken biryani", img: "biryani.jpg" },
+  { name: "Paneer Tikka", price: 120, veg: true, desc: "Grilled paneer with spices", img: "paneer tickka.jpg" },
+  { name: "Gulab Jamun", price: 60, veg: true, desc: "Sweet milk dumplings", img: "gulabjamunjpg" },
+  { name: "Chai", price: 12, veg: true, desc: "Hot masala chai", img: "chai.jpg" },
+  { name: "Misal Pav", price: 65, veg: true, desc: "Spicy misal with pav", img: "misal pav.jpg" },
+  { name: "Poha", price: 45, veg: true, desc: "Onion, sev, peanuts poha", img: "poha.jpg" }
+];
+;
 
     function renderMenu(items = menuItems) {
       els.menuContainer.innerHTML = items.map(item => `
@@ -1196,3 +1197,4 @@ if ('serviceWorker' in navigator) {
   </script>
 </body>
 </html>
+
