@@ -645,62 +645,61 @@ upi
       openCartModal();
     }
 
+
+    async function placeOrder() {
+  if (cart.length === 0) return alert("Cart is empty!");
+
+  const inputPhone = document.getElementById('customerPhone').value.trim() || "guest";
+  const total = cart.reduce((sum, i) => sum + i.price, 0);
+  const orderId = `order_${Date.now()}`;
+
+  const upiId = "8999540672@ybl";
+  const upiLink = `upi://pay?pa=${upiId}&pn=Anand%20Canteen&am=${total}&cu=INR&tn=Table${currentTable}-Ph${inputPhone}`;
+
+  // First ask for confirmation before opening UPI
+  const willPay = confirm("UPI app will open now. Only press OK after successful payment. If you cancel or payment fails, the order will NOT be placed.");
+
+  if (!willPay) {
+    return alert("Order cancelled.");
+  }
+
+  // Open the UPI payment app/link
+  window.open(upiLink, '_blank');
+
+  // Give user time to complete payment, then ask for confirmation
+  setTimeout(() => {
+    const paid = confirm("Was the payment successful? Press OK for Yes, Cancel for No");
+
+    if (paid) {
+      // Only save the order if user confirms payment was done
+      db.ref(`orders/${orderId}`).set({
+        table: currentTable,
+        items: cart,
+        total: total,
+        phone: currentUser ? currentUser.email : inputPhone,
+        userId: currentUser ? currentUser.uid : null,
+        status: "paid_upi",
+        timestamp: Date.now(),
+        createdAt: Date.now(),
+        canCancelUntil: Date.now() + 120000
+      }).then(() => {
+        alert(`Order placed successfully! ID: ${orderId}\nYou can cancel within 2 minutes.`);
+        cart = [];
+        localStorage.removeItem('cart');
+        updateCartCount();
+        closeCartModal();
+      }).catch(err => {
+        console.error(err);
+        alert("Failed to save order. Please try again.");
+      });
+    } else {
+      alert("Payment was not completed. Order will not be placed. Please try again.");
+    }
+  }, 30000); // Wait 30 seconds before asking (gives user time to pay)
+}
+
     
-      async function placeOrder() {
-    if (cart.length === 0) return alert("Cart empty!");
-
-    const inputPhone = document.getElementById('customerPhone').value.trim() || "guest";
-    const total = cart.reduce((sum, i) => sum + i.price, 0);
-    const orderId = `order_${Date.now()}`;
-    const upiId = "7620278954@axl";   // yeh change kar lena agar zarurat ho
-
-    const upiLink = `upi://pay?pa=${upiId}&pn=Anand%20Canteen&am=${total}&cu=INR&tn=Table${currentTable}-Ph${inputPhone}`;
-
-    // Step 1: User ko batao aur confirm lo ki woh payment karne ja raha hai
-    const willProceed = confirm(
-        `Total amount: ₹${total}\n\n` +
-        `UPI app khulega → Payment complete karo.\n` +
-        `Payment successful hone ke baad "OK" press karna.\n\n` +
-        `Cancel karna hai to "Cancel" dabana.`
-    );
-
-    if (!willProceed) {
-        alert("Order cancel kar diya gaya.");
-        return;
-    }
-
-    // Step 2: UPI app kholo
-    window.open(upiLink, '_blank');
-
-    // Step 3: Payment hone ke baad final confirmation lo
-    const paymentDone = confirm(
-        "Kya payment successfully ho gaya?\n\n" +
-        "→ OK = Haan, order place karo\n" +
-        "→ Cancel = Nahi hua, order mat banao"
-    );
-
-    if (!paymentDone) {
-        alert("Order place nahi hua.\nPayment fail hua ya cancel kiya → dobara try kar sakte ho.");
-        return;
-    }
-
-    // Abhi tak payment confirm ho gaya → order save karo
-    try {
-        await db.ref(`orders/${orderId}`).set({
-            table: currentTable,
-            items: cart,
-            total: total,
-            phone: currentUser ? currentUser.email : inputPhone,
-            userId: currentUser ? currentUser.uid : null,
-            status: "paid_upi",          // ya "new" bhi rakh sakte ho
-            timestamp: Date.now(),
-            createdAt: Date.now(),
-            canCancelUntil: Date.now() + 120000   // 2 min cancel window
-        });
-
-        alert(`Order successfully placed!\nOrder ID: ${orderId}\n\n` +
-              `You can track/cancel within 2 minutes using the floating button.`);
-
+     
         // Clear cart
         cart = [];
         localStorage.removeItem('cart');
@@ -1224,6 +1223,7 @@ if ('serviceWorker' in navigator) {
   </script>
 </body>
 </html>
+
 
 
 
