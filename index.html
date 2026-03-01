@@ -1,16 +1,14 @@
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <!-- PWA Support -->
+<!-- PWA Support -->
 <meta name="theme-color" content="#f97316">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="manifest" href="manifest.json">
-<link rel="icon" href="anand_canteen_icon_192x192.png" sizes="192x192">
-<link rel="apple-touch-icon" href="anand_canteen_icon_192x192.png">
-  
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/icon-192.png" sizes="192x192">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<!DOCTYPE html>
+<html lang="en">
+<head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Anand Canteen • QR Ordering & Kitchen</title>
@@ -434,17 +432,13 @@
       
       <div class="text-center mb-8">
         <h4 class="text-2xl font-bold text-green-400 mb-4">Pay with UPI</h4>
-        <img src="upi-qr.jpeg" 
-     alt="UPI QR" 
-     class="mx-auto w-64 h-64 md:w-72 md:h-72 object-contain border-4 border-green-600 rounded-2xl mb-4">
+        <img src="upi-qr.jpeg" alt="UPI QR" class="mx-auto w-64 h-64 md:w-72 md:h-72 object-contain border-4 border-green-600 rounded-2xl mb-4" onerror="this.src='https://via.placeholder.com/300?text=QR+Missing';">
         <p class="text-xl font-semibold text-orange-400">₹<span id="qrTotal">0</span></p>
       </div>
 
       <button onclick="placeOrder()" class="btn-primary text-white py-5 w-full rounded-xl text-xl font-bold">Pay & Confirm Order</button>
     </div>
   </div>
-
-  
 
   <script>
     // ───────────────────────────────
@@ -548,16 +542,15 @@
     // MENU & CART
     // ───────────────────────────────
     const menuItems = [
-  { name: "Anda Kari", price: 80, veg: false, desc: "Spicy egg curry", img: "anda kari.jpg" },
-  { name: "Chicken Curry", price: 150, veg: false, desc: "Fresh chicken curry", img: "chicken.jpg" },
-  { name: "Biryani", price: 180, veg: false, desc: "Aromatic chicken biryani", img: "biryani.jpg" },
-  { name: "Paneer Tikka", price: 120, veg: true, desc: "Grilled paneer with spices", img: "paneer tickka.jpg" },
-  { name: "Gulab Jamun", price: 60, veg: true, desc: "Sweet milk dumplings", img: "gulabjamun.jpg" },
-  { name: "Chai", price: 12, veg: true, desc: "Hot masala chai", img: "chai.jpg" },
-  { name: "Misal Pav", price: 65, veg: true, desc: "Spicy misal with pav", img: "misal pav.jpg" },
-  { name: "Poha", price: 45, veg: true, desc: "Onion, sev, peanuts poha", img: "poha.jpg" }
-];
-;
+      { name: "Anda Kari", price: 80, veg: false, desc: "Spicy egg curry", img: "images/anda kari.jpg" },
+      { name: "Chicken Curry", price: 150, veg: false, desc: "Fresh chicken curry", img: "images/chicken.jpg" },
+      { name: "Biryani", price: 180, veg: false, desc: "Aromatic chicken biryani", img: "images/biryani.jpg" },
+      { name: "Paneer Tikka", price: 120, veg: true, desc: "Grilled paneer with spices", img: "images/paneer tickka.jpg" },
+      { name: "Gulab Jamun", price: 60, veg: true, desc: "Sweet milk dumplings", img: "images/gulabjamun.jpg" },
+      { name: "Chai", price: 12, veg: true, desc: "Hot masala chai", img: "images/chai.jpg" },
+      { name: "Misal Pav", price: 65, veg: true, desc: "Spicy misal with pav", img: "images/misal pav.jpg" },
+      { name: "Poha", price: 45, veg: true, desc: "Onion, sev, peanuts poha", img: "images/poha.jpg" }
+    ];
 
     function renderMenu(items = menuItems) {
       els.menuContainer.innerHTML = items.map(item => `
@@ -650,47 +643,45 @@
       updateCartCount();
       openCartModal();
     }
+
     async function placeOrder() {
-  if (cart.length === 0) return alert("Cart empty!");
+      if (cart.length === 0) return alert("Cart empty!");
 
-  const inputPhone = document.getElementById('customerPhone').value.trim() || "guest";
-  const total = cart.reduce((sum, i) => sum + i.price, 0);
-  const orderId = `order_${Date.now()}`;
+      const inputPhone = document.getElementById('customerPhone').value.trim() || "guest";
+      const total = cart.reduce((sum, i) => sum + i.price, 0);
+      const orderId = `order_${Date.now()}`;
 
-  const upiId = "8999540672@ybl";
-  const upiLink = `upi://pay?pa=${upiId}&pn=Anand%20Canteen&am=${total}&cu=INR&tn=Table${currentTable}-Ph${inputPhone}`;
+      const upiId = "8999540672@ybl";
+      const upiLink = `upi://pay?pa=${upiId}&pn=Anand%20Canteen&am=${total}&cu=INR&tn=Table${currentTable}-Ph${inputPhone}`;
 
-  if (!confirm("Open UPI app to pay?")) return;
+      if (confirm("Open UPI app to pay? After payment click OK to confirm order.")) {
+        window.open(upiLink, '_blank');
 
-  window.open(upiLink, '_blank');
+        try {
+          await db.ref(`orders/${orderId}`).set({
+            table: currentTable,
+            items: cart,
+            total: total,
+            phone: currentUser ? currentUser.email : inputPhone,
+            userId: currentUser ? currentUser.uid : null,
+            status: "paid_upi",
+            timestamp: Date.now(),
+            createdAt: Date.now(),
+            canCancelUntil: Date.now() + 120000
+          });
 
-  try {
-    await db.ref(`orders/${orderId}`).set({
-      table: currentTable,
-      items: cart,
-      total: total,
-      phone: currentUser ? currentUser.email : inputPhone,
-      userId: currentUser ? currentUser.uid : null,
-      status: "pending_payment",
-      timestamp: Date.now(),
-      createdAt: Date.now(),
-      canCancelUntil: Date.now() + 120000
-    });
+          alert(`Order placed! ID: ${orderId}\nYou can cancel within 2 minutes.`);
+          
+          cart = [];
+          localStorage.removeItem('cart');
+          updateCartCount();
+          closeCartModal();
 
-    alert(`Order created!\nStatus: Payment Pending\nOrder ID: ${orderId}`);
-
-    cart = [];
-    localStorage.removeItem('cart');
-    updateCartCount();
-    closeCartModal();
-
-  } catch (err) {
-    alert("Order save failed!");
-    console.error(err);
-  }
-}
-
-
+        } catch (err) {
+          console.error(err);
+          alert("Order save failed. Please try again.");
+        }
+      }
     }
 
     // ───────────────────────────────
@@ -878,20 +869,9 @@
           return;
         }
 
-   
-
         const sorted = Object.entries(orders)
-  .map(([id, o]) => ({ id, ...o }))
-  .filter(order => 
-     
-    order.status === "pending_payment" ||
-    order.status === "paid_upi" ||
-    order.status === "new" ||
-    order.status === "preparing" ||
-    order.status === "ready"
-)
-  )
-  .sort((a,b) => (b.timestamp||0) - (a.timestamp||0));
+          .map(([id, o]) => ({ id, ...o }))
+          .sort((a,b) => (b.timestamp||0) - (a.timestamp||0));
 
         sorted.forEach(order => {
           const status = order.status || 'new';
@@ -906,16 +886,14 @@
           previousStatuses.set(orderId, status);
 
           const statusClass = `status-${status}`;
-
           const statusText = {
-  pending_payment: 'Payment Pending ❌',
-  paid_upi: 'Payment Done ✅',
-  new: 'New',
-  preparing: 'Preparing',
-  ready: 'Ready',
-  delivered: 'Delivered',
-  cancelled: 'Cancelled'
-}[status] || status;
+            paid_upi: 'Payment Done',
+            new: 'New',
+            preparing: 'Preparing',
+            ready: 'Ready',
+            delivered: 'Delivered',
+            cancelled: 'Cancelled'
+          }[status] || status;
 
           const card = document.createElement('div');
           card.className = `card p-6 border-l-8 ${status === 'new' ? 'border-red-500' : status === 'preparing' ? 'border-yellow-500' : status === 'ready' ? 'border-green-500' : status === 'cancelled' ? 'border-gray-500' : 'border-gray-600'}`;
@@ -938,18 +916,11 @@
               </ul>
             </div>
             <div class="flex flex-wrap gap-4">
-            ${order.status === 'pending_payment' ? 
-  `<p class="text-red-400 font-bold mt-3">⚠ Payment not received yet</p>` 
-:
-  `
-  <div class="flex flex-wrap gap-4">
-    <button onclick="updateOrderStatus('${order.id}', 'preparing')" class="bg-yellow-600 hover:bg-yellow-500 px-6 py-3 rounded-xl">Preparing</button>
-    <button onclick="updateOrderStatus('${order.id}', 'ready')" class="bg-green-600 hover:bg-green-500 px-6 py-3 rounded-xl">Ready</button>
-    <button onclick="updateOrderStatus('${order.id}', 'delivered')" class="bg-gray-600 hover:bg-gray-500 px-6 py-3 rounded-xl">Delivered</button>
-  </div>
-  `
-}
-      
+              <button onclick="updateOrderStatus('${order.id}', 'preparing')" class="bg-yellow-600 hover:bg-yellow-500 px-6 py-3 rounded-xl">Preparing</button>
+              <button onclick="updateOrderStatus('${order.id}', 'ready')" class="bg-green-600 hover:bg-green-500 px-6 py-3 rounded-xl">Ready</button>
+              <button onclick="updateOrderStatus('${order.id}', 'delivered')" class="bg-gray-600 hover:bg-gray-500 px-6 py-3 rounded-xl">Delivered</button>
+            </div>
+          `;
           ordersDiv.appendChild(card);
         });
       });
@@ -1223,16 +1194,6 @@ if ('serviceWorker' in navigator) {
   });
 }
   </script>
-<footer style="text-align:center; padding:10px; background:#111; color:#ff9800; margin-top:20px; font-weight:bold;">
-  Developed by Arjun Chauhan
-</footer>
 </body>
 </html>
-
-
-
-
-
-
-
 
