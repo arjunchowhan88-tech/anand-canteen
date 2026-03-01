@@ -432,13 +432,17 @@
       
       <div class="text-center mb-8">
         <h4 class="text-2xl font-bold text-green-400 mb-4">Pay with UPI</h4>
-        <img src="images/upi-qr.jpeg" alt="UPI QR" class="mx-auto w-64 h-64 md:w-72 md:h-72 object-contain border-4 border-green-600 rounded-2xl mb-4" onerror="this.src='https://via.placeholder.com/300?text=QR+Missing';">
+        <img src="upi-qr.jpeg" 
+     alt="UPI QR" 
+     class="mx-auto w-64 h-64 md:w-72 md:h-72 object-contain border-4 border-green-600 rounded-2xl mb-4">
         <p class="text-xl font-semibold text-orange-400">₹<span id="qrTotal">0</span></p>
       </div>
 
       <button onclick="placeOrder()" class="btn-primary text-white py-5 w-full rounded-xl text-xl font-bold">Pay & Confirm Order</button>
     </div>
   </div>
+
+  
 
   <script>
     // ───────────────────────────────
@@ -1197,5 +1201,6 @@ if ('serviceWorker' in navigator) {
   </script>
 </body>
 </html>
+
 
 
