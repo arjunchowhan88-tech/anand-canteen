@@ -1,4 +1,8 @@
-<!-- PWA Support -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- PWA Support -->
 <meta name="theme-color" content="#f97316">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -6,9 +10,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="anand_canteen_icon_192x192.png" sizes="192x192">
 <link rel="apple-touch-icon" href="anand_canteen_icon_192x192.png">
-<!DOCTYPE html>
-<html lang="en">
-<head>
+  
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Anand Canteen • QR Ordering & Kitchen</title>
@@ -879,10 +881,13 @@
         const sorted = Object.entries(orders)
   .map(([id, o]) => ({ id, ...o }))
   .filter(order => 
-      order.status === "paid_upi" ||
-      order.status === "new" ||
-      order.status === "preparing" ||
-      order.status === "ready"
+     
+    order.status === "pending_payment" ||
+    order.status === "paid_upi" ||
+    order.status === "new" ||
+    order.status === "preparing" ||
+    order.status === "ready"
+)
   )
   .sort((a,b) => (b.timestamp||0) - (a.timestamp||0));
 
@@ -899,14 +904,16 @@
           previousStatuses.set(orderId, status);
 
           const statusClass = `status-${status}`;
+
           const statusText = {
-            paid_upi: 'Payment Done',
-            new: 'New',
-            preparing: 'Preparing',
-            ready: 'Ready',
-            delivered: 'Delivered',
-            cancelled: 'Cancelled'
-          }[status] || status;
+  pending_payment: 'Payment Pending ❌',
+  paid_upi: 'Payment Done ✅',
+  new: 'New',
+  preparing: 'Preparing',
+  ready: 'Ready',
+  delivered: 'Delivered',
+  cancelled: 'Cancelled'
+}[status] || status;
 
           const card = document.createElement('div');
           card.className = `card p-6 border-l-8 ${status === 'new' ? 'border-red-500' : status === 'preparing' ? 'border-yellow-500' : status === 'ready' ? 'border-green-500' : status === 'cancelled' ? 'border-gray-500' : 'border-gray-600'}`;
@@ -929,11 +936,18 @@
               </ul>
             </div>
             <div class="flex flex-wrap gap-4">
-              <button onclick="updateOrderStatus('${order.id}', 'preparing')" class="bg-yellow-600 hover:bg-yellow-500 px-6 py-3 rounded-xl">Preparing</button>
-              <button onclick="updateOrderStatus('${order.id}', 'ready')" class="bg-green-600 hover:bg-green-500 px-6 py-3 rounded-xl">Ready</button>
-              <button onclick="updateOrderStatus('${order.id}', 'delivered')" class="bg-gray-600 hover:bg-gray-500 px-6 py-3 rounded-xl">Delivered</button>
-            </div>
-          `;
+            ${order.status === 'pending_payment' ? 
+  `<p class="text-red-400 font-bold mt-3">⚠ Payment not received yet</p>` 
+:
+  `
+  <div class="flex flex-wrap gap-4">
+    <button onclick="updateOrderStatus('${order.id}', 'preparing')" class="bg-yellow-600 hover:bg-yellow-500 px-6 py-3 rounded-xl">Preparing</button>
+    <button onclick="updateOrderStatus('${order.id}', 'ready')" class="bg-green-600 hover:bg-green-500 px-6 py-3 rounded-xl">Ready</button>
+    <button onclick="updateOrderStatus('${order.id}', 'delivered')" class="bg-gray-600 hover:bg-gray-500 px-6 py-3 rounded-xl">Delivered</button>
+  </div>
+  `
+}
+      
           ordersDiv.appendChild(card);
         });
       });
@@ -1212,6 +1226,7 @@ if ('serviceWorker' in navigator) {
 </footer>
 </body>
 </html>
+
 
 
 
