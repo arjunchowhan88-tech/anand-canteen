@@ -669,7 +669,7 @@
             total: total,
             phone: currentUser ? currentUser.email : inputPhone,
             userId: currentUser ? currentUser.uid : null,
-            status: "paid_upi",
+            status: "pending_payment",
             timestamp: Date.now(),
             createdAt: Date.now(),
             canCancelUntil: Date.now() + 120000
@@ -874,9 +874,17 @@
           return;
         }
 
+   
+
         const sorted = Object.entries(orders)
-          .map(([id, o]) => ({ id, ...o }))
-          .sort((a,b) => (b.timestamp||0) - (a.timestamp||0));
+  .map(([id, o]) => ({ id, ...o }))
+  .filter(order => 
+      order.status === "paid_upi" ||
+      order.status === "new" ||
+      order.status === "preparing" ||
+      order.status === "ready"
+  )
+  .sort((a,b) => (b.timestamp||0) - (a.timestamp||0));
 
         sorted.forEach(order => {
           const status = order.status || 'new';
@@ -1204,6 +1212,7 @@ if ('serviceWorker' in navigator) {
 </footer>
 </body>
 </html>
+
 
 
 
