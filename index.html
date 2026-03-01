@@ -650,45 +650,47 @@
       updateCartCount();
       openCartModal();
     }
-
     async function placeOrder() {
-      if (cart.length === 0) return alert("Cart empty!");
+  if (cart.length === 0) return alert("Cart empty!");
 
-      const inputPhone = document.getElementById('customerPhone').value.trim() || "guest";
-      const total = cart.reduce((sum, i) => sum + i.price, 0);
-      const orderId = `order_${Date.now()}`;
+  const inputPhone = document.getElementById('customerPhone').value.trim() || "guest";
+  const total = cart.reduce((sum, i) => sum + i.price, 0);
+  const orderId = `order_${Date.now()}`;
 
-      const upiId = "8999540672@ybl";
-      const upiLink = `upi://pay?pa=${upiId}&pn=Anand%20Canteen&am=${total}&cu=INR&tn=Table${currentTable}-Ph${inputPhone}`;
+  const upiId = "8999540672@ybl";
+  const upiLink = `upi://pay?pa=${upiId}&pn=Anand%20Canteen&am=${total}&cu=INR&tn=Table${currentTable}-Ph${inputPhone}`;
 
-      if (confirm("Open UPI app to pay? After payment click OK to confirm order.")) {
-        window.open(upiLink, '_blank');
+  if (!confirm("Open UPI app to pay?")) return;
 
-        try {
-          await db.ref(`orders/${orderId}`).set({
-            table: currentTable,
-            items: cart,
-            total: total,
-            phone: currentUser ? currentUser.email : inputPhone,
-            userId: currentUser ? currentUser.uid : null,
-            status: "pending_payment",
-            timestamp: Date.now(),
-            createdAt: Date.now(),
-            canCancelUntil: Date.now() + 120000
-          });
+  window.open(upiLink, '_blank');
 
-          alert(`Order placed! ID: ${orderId}\nYou can cancel within 2 minutes.`);
-          
-          cart = [];
-          localStorage.removeItem('cart');
-          updateCartCount();
-          closeCartModal();
+  try {
+    await db.ref(`orders/${orderId}`).set({
+      table: currentTable,
+      items: cart,
+      total: total,
+      phone: currentUser ? currentUser.email : inputPhone,
+      userId: currentUser ? currentUser.uid : null,
+      status: "pending_payment",
+      timestamp: Date.now(),
+      createdAt: Date.now(),
+      canCancelUntil: Date.now() + 120000
+    });
 
-        } catch (err) {
-          console.error(err);
-          alert("Order save failed. Please try again.");
-        }
-      }
+    alert(`Order created!\nStatus: Payment Pending\nOrder ID: ${orderId}`);
+
+    cart = [];
+    localStorage.removeItem('cart');
+    updateCartCount();
+    closeCartModal();
+
+  } catch (err) {
+    alert("Order save failed!");
+    console.error(err);
+  }
+}
+
+
     }
 
     // ───────────────────────────────
@@ -1226,6 +1228,7 @@ if ('serviceWorker' in navigator) {
 </footer>
 </body>
 </html>
+
 
 
 
