@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kitchen Dashboard • Anand Canteen</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
+  
+  <style>
+    body { background: #111; color: white; font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+    .order-card {
+      background: #222;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+      border-left: 6px solid #f97316;
+    }
+    .status-new { border-left-color: #ef4444; }
+    .status-preparing { border-left-color: #f59e0b; }
+    .status-ready { border-left-color: #22c55e; }
+    .status-delivered { border-left-color: #6b7280; opacity: 0.7; }
+    button { padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: bold; margin-right: 8px; }
+  </style>
+</head>
+<body>
+
+  <div class="max-w-6xl mx-auto">
+    <h1 class="text-4xl font-bold text-center text-orange-500 mb-8">Kitchen Dashboard</h1>
+    
+    <div class="flex justify-between mb-6">
+      <h2 class="text-2xl">Live Orders</h2>
+      <button onclick="location.reload()" class="bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded">Refresh</button>
+    </div>
+
+    <div id="orders-list" class="space-y-4"></div>
+  </div>
+
+  <script>
+    // Firebase Config (same as index.html)
+    const firebaseConfig = {
+      apiKey: "AIzaSyCOKzlZPt697OU0ZsPF71oQnFgujj408Sw",
+      authDomain: "anand-canteen-qr-advanced.firebaseapp.com",
+      databaseURL: "https://anand-canteen-qr-advanced-default-rtdb.firebaseio.com",
+      projectId: "anand-canteen-qr-advanced",
+      storageBucket: "anand-canteen-qr-advanced.firebasestorage.app",
+      messagingSenderId: "332035287761",
+      appId: "1:332035287761:web:6714c3639d0420abc0f3f0",
+      measurementId: "G-EMX68TT0G0"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // Real-time orders listen
+    db.ref('orders').orderByChild('timestamp').on('value', (snapshot) => {
+      const ordersList = document.getElementById('orders-list');
+      ordersList.innerHTML = '';
+
+      const orders = snapshot.val() || {};
+      const sortedOrders = Object.entries(orders)
+        .map(([id, order]) => ({ id, ...order }))
+        .sort((a, b) => b.timestamp - a.timestamp); // newest first
+
+      if (sortedOrders.length === 0) {
+        ordersList.innerHTML = '<p class="text-center text-gray-400 text-xl py-10">Koi naya order nahi hai abhi...</p>';
+        return;
+      }
+
+      sortedOrders.forEach(order => {
+        const statusClass = `status-${order.status || 'new'}`;
+        const statusText = {
+          new: 'New',
+          preparing: 'Preparing',
+          ready: 'Ready',
+          delivered: 'Delivered'
+        }[order.status || 'new'];
+
+        const card = document.createElement('div');
+        card.className = `order-card ${statusClass}`;
+        card.innerHTML = `
+          <div class="flex justify-between items-start mb-4">
+            <div>
+              <h3 class="text-xl font-bold">Table: ${order.table || '—'}</h3>
+              <p class="text-sm text-gray-400">Order ID: ${order.id || '—'}</p>
+              <p class="text-sm text-gray-400 mt-1">Phone: ${order.phone || 'guest'}</p>
+            </div>
+            <div class="text-right">
+              <p class="text-lg font-bold text-orange-400">₹${order.total || 0}</p>
+              <span class="inline-block px-3 py-1 mt-2 rounded-full text-sm font-medium bg-gray-700">
+                ${statusText}
+              </span>
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <h4 class="font-semibold mb-2">Items:</h4>
+            <ul class="list-disc pl-5 text-sm">
+              ${order.items.map(item => `<li>${item.name} × 1 - ₹${item.price}</li>`).join('')}
+            </ul>
+          </div>
+
+          <div class="flex flex-wrap gap-3">
+            <button onclick="updateStatus('${order.id}', 'preparing')" class="bg-yellow-600 hover:bg-yellow-500 px-4 py-2 rounded">
+              Mark Preparing
+            </button>
+            <button onclick="updateStatus('${order.id}', 'ready')" class="bg-green-600 hover:bg-green-500 px-4 py-2 rounded">
+              Mark Ready
+            </button>
+            <button onclick="updateStatus('${order.id}', 'delivered')" class="bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded">
+              Mark Delivered
+            </button>
+          </div>
+        `;
+
+        ordersList.appendChild(card);
+      });
+    });
+
+    function updateStatus(orderId, newStatus) {
+      if (confirm(`Order ko ${newStatus} mark karna hai?`)) {
+        db.ref(`orders/${orderId}`).update({
+          status: newStatus,
+          updatedAt: Date.now()
+        }).then(() => {
+          alert("Status update ho gaya!");
+        }).catch(err => {
+          alert("Error: " + err.message);
+        });
+      }
+    }
+  </script>
+</body>
+</html>

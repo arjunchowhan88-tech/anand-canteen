@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anand Canteen - Smart Order</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
+
+<style>
+body{background:#0f0f0f;color:white}
+.card{background:#1a1a1a;border-radius:15px;padding:15px}
+</style>
+</head>
+<body class="p-6">
+
+<h1 class="text-3xl font-bold text-orange-500 text-center mb-6">Anand Canteen</h1>
+
+<!-- Track Order -->
+<div class="max-w-md mx-auto bg-gray-900 p-6 rounded-xl mb-8">
+<h3 class="text-xl font-bold text-orange-400 mb-3 text-center">Track Your Order</h3>
+<input id="track-order-id" type="text" placeholder="Enter Order ID"
+class="w-full p-3 bg-gray-800 rounded mb-3">
+<button onclick="trackOrder()" class="w-full bg-orange-600 py-2 rounded">Track</button>
+<div id="track-result" class="mt-3 text-center"></div>
+</div>
+
+<!-- Menu -->
+<div class="grid grid-cols-2 gap-4 mb-6" id="menu"></div>
+
+<!-- Cart -->
+<div class="text-center">
+<button onclick="payNow()" class="bg-green-600 px-6 py-3 rounded">Pay & Order</button>
+</div>
+
+<script>
+
+// 🔥 Firebase Config
+const firebaseConfig = {
+apiKey: "YOUR_API_KEY",
+authDomain: "YOUR_AUTH_DOMAIN",
+databaseURL: "YOUR_DATABASE_URL",
+projectId: "YOUR_PROJECT_ID",
+storageBucket: "YOUR_STORAGE_BUCKET",
+messagingSenderId: "YOUR_MSG_ID",
+appId: "YOUR_APP_ID"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+let cart=[];
+
+// 🔥 MENU DATA
+const menu=[
+{name:"Poha",price:40},
+{name:"Misal Pav",price:60},
+{name:"Chai",price:15},
+{name:"Paneer Tikka",price:120}
+];
+
+// Render Menu
+function renderMenu(){
+document.getElementById("menu").innerHTML=menu.map(item=>`
+<div class="card text-center">
+<h2 class="text-lg font-bold">${item.name}</h2>
+<p class="text-orange-400">₹${item.price}</p>
+<button onclick="addToCart('${item.name}',${item.price})"
+class="bg-orange-600 px-3 py-1 rounded mt-2">Add</button>
+</div>`).join('');
+}
+renderMenu();
+
+function addToCart(name,price){
+cart.push({name,price});
+alert(name+" added");
+}
+
+// 🔥 PAY & SAVE ORDER
+function payNow(){
+if(cart.length===0)return alert("Cart empty");
+
+const total=cart.reduce((a,b)=>a+b.price,0);
+const orderId="order_"+Date.now();
+
+db.ref("orders/"+orderId).set({
+items:cart,
+total:total,
+status:"new",
+timestamp:Date.now()
+}).then(()=>{
+alert("Order Confirmed!\nOrder ID: "+orderId);
+});
+
+cart=[];
+}
+
+// 🔥 CUSTOMER TRACKING
+function trackOrder(){
+const id=document.getElementById("track-order-id").value.trim();
+const result=document.getElementById("track-result");
+
+if(!id){
+result.innerHTML="<span class='text-red-400'>Enter Order ID</span>";
+return;
+}
+
+db.ref("orders/"+id).on("value",(snap)=>{
+if(!snap.exists()){
+result.innerHTML="<span class='text-red-400'>Order Not Found</span>";
+return;
+}
+
+const data=snap.val();
+
+const statusMap={
+new:"🆕 Order Received",
+preparing:"👨‍🍳 Preparing",
+ready:"✅ Ready",
+delivered:"📦 Delivered"
+};
+
+result.innerHTML=`
+<p class="text-green-400 font-bold">${statusMap[data.status]}</p>
+<p>Total: ₹${data.total}</p>
+`;
+});
+}
+
+</script>
+</body>
+</html>
