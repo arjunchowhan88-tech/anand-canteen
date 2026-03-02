@@ -1,4 +1,3 @@
-upi
 <!-- PWA Support -->
 <meta name="theme-color" content="#f97316">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -645,71 +644,45 @@ upi
       openCartModal();
     }
 
-
     async function placeOrder() {
-  if (cart.length === 0) return alert("Cart is empty!");
+      if (cart.length === 0) return alert("Cart empty!");
 
-  const inputPhone = document.getElementById('customerPhone').value.trim() || "guest";
-  const total = cart.reduce((sum, i) => sum + i.price, 0);
-  const orderId = `order_${Date.now()}`;
+      const inputPhone = document.getElementById('customerPhone').value.trim() || "guest";
+      const total = cart.reduce((sum, i) => sum + i.price, 0);
+      const orderId = `order_${Date.now()}`;
 
-  const upiId = "8999540672@ybl";
-  const upiLink = `upi://pay?pa=${upiId}&pn=Anand%20Canteen&am=${total}&cu=INR&tn=Table${currentTable}-Ph${inputPhone}`;
+      const upiId = "7620278954@axl";
+      const upiLink = `upi://pay?pa=${upiId}&pn=Anand%20Canteen&am=${total}&cu=INR&tn=Table${currentTable}-Ph${inputPhone}`;
 
-  // First ask for confirmation before opening UPI
-  const willPay = confirm("UPI app will open now. Only press OK after successful payment. If you cancel or payment fails, the order will NOT be placed.");
+      if (confirm("Open UPI app to pay? After payment click OK to confirm order.")) {
+        window.open(upiLink, '_blank');
 
-  if (!willPay) {
-    return alert("Order cancelled.");
-  }
+        try {
+          await db.ref(`orders/${orderId}`).set({
+            table: currentTable,
+            items: cart,
+            total: total,
+            phone: currentUser ? currentUser.email : inputPhone,
+            userId: currentUser ? currentUser.uid : null,
+            status: "paid_upi",
+            timestamp: Date.now(),
+            createdAt: Date.now(),
+            canCancelUntil: Date.now() + 120000
+          });
 
-  // Open the UPI payment app/link
-  window.open(upiLink, '_blank');
+          alert(`Order placed! ID: ${orderId}\nYou can cancel within 2 minutes.`);
+          
+          cart = [];
+          localStorage.removeItem('cart');
+          updateCartCount();
+          closeCartModal();
 
-  // Give user time to complete payment, then ask for confirmation
-  setTimeout(() => {
-    const paid = confirm("Was the payment successful? Press OK for Yes, Cancel for No");
-
-    if (paid) {
-      // Only save the order if user confirms payment was done
-      db.ref(`orders/${orderId}`).set({
-        table: currentTable,
-        items: cart,
-        total: total,
-        phone: currentUser ? currentUser.email : inputPhone,
-        userId: currentUser ? currentUser.uid : null,
-        status: "paid_upi",
-        timestamp: Date.now(),
-        createdAt: Date.now(),
-        canCancelUntil: Date.now() + 120000
-      }).then(() => {
-        alert(`Order placed successfully! ID: ${orderId}\nYou can cancel within 2 minutes.`);
-        cart = [];
-        localStorage.removeItem('cart');
-        updateCartCount();
-        closeCartModal();
-      }).catch(err => {
-        console.error(err);
-        alert("Failed to save order. Please try again.");
-      });
-    } else {
-      alert("Payment was not completed. Order will not be placed. Please try again.");
+        } catch (err) {
+          console.error(err);
+          alert("Order save failed. Please try again.");
+        }
+      }
     }
-  }, 30000); // Wait 30 seconds before asking (gives user time to pay)
-}
-
-    
-     
-        // Clear cart
-        cart = [];
-        localStorage.removeItem('cart');
-        updateCartCount();
-        closeCartModal();
-    } catch (err) {
-        console.error("Order save error:", err);
-        alert("Order database mein save nahi ho paya.\nError: " + err.message + "\nPlease try again or contact support.");
-    }
-}
 
     // ───────────────────────────────
     // TRACK / CANCEL ORDER
@@ -1223,10 +1196,3 @@ if ('serviceWorker' in navigator) {
   </script>
 </body>
 </html>
-
-
-
-
-
-
-
